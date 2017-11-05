@@ -21,8 +21,89 @@ WLAN_COMMON_INC ?= $(WLAN_ROOT)/$(WLAN_COMMON_ROOT)
 CONFIG_QCA_CLD_WLAN_PROFILE ?= default
 ifeq ($(KERNEL_BUILD), n)
 ifneq ($(ANDROID_BUILD_TOP),)
-      override WLAN_ROOT := $(ANDROID_BUILD_TOP)/$(WLAN_ROOT)
-      override WLAN_COMMON_INC := $(ANDROID_BUILD_TOP)/$(WLAN_COMMON_INC)
+	override WLAN_ROOT := $(ANDROID_BUILD_TOP)/$(WLAN_ROOT)
+	override WLAN_COMMON_INC := $(ANDROID_BUILD_TOP)/$(WLAN_COMMON_INC)
+endif
+endif
+
+ifneq ($(CONFIG_MOBILE_ROUTER), y)
+CONFIG_QCOM_ESE := y
+endif
+
+#Enable beacon reporting feature
+CONFIG_WLAN_BEACON_REPORTING := y
+
+#Enable/Disable FW thermal mitigation feature
+CONFIG_WLAN_FW_THERMAL_MITIGATION := n
+
+# Feature flags which are not (currently) configurable via Kconfig
+
+#Whether to build debug version
+BUILD_DEBUG_VERSION := 0
+
+#Enable this flag to build driver in diag version
+BUILD_DIAG_VERSION := 1
+
+#Do we panic on bug?  default is to warn
+ifeq ($(CONFIG_SLUB_DEBUG), y)
+	PANIC_ON_BUG := 1
+else ifeq ($(CONFIG_PERF_DEBUG), y)
+	PANIC_ON_BUG := 1
+else
+	PANIC_ON_BUG := 0
+endif
+
+#Enable OL debug and wmi unified functions
+CONFIG_ATH_PERF_PWR_OFFLOAD := 1
+
+#Disable packet log
+CONFIG_REMOVE_PKT_LOG := 0
+
+#Whether have QMI support
+CONFIG_QMI_SUPPORT := 1
+
+#Enable 11AC TX
+ifeq ($(CONFIG_ROME_IF),pci)
+	CONFIG_ATH_11AC_TXCOMPACT := 1
+endif
+ifeq ($(CONFIG_ROME_IF),usb)
+	CONFIG_ATH_11AC_TXCOMPACT := 0
+endif
+
+#Enable OS specific IRQ abstraction
+CONFIG_ATH_SUPPORT_SHARED_IRQ := 1
+
+#Enable message based HIF instead of RAW access in BMI
+ifeq ($(CONFIG_QCA_WIFI_SDIO), 1)
+CONFIG_HIF_MESSAGE_BASED := 0
+else
+CONFIG_HIF_MESSAGE_BASED := 1
+endif
+
+#Enable PCI specific APIS (dma, etc)
+ifeq ($(CONFIG_ROME_IF),pci)
+	CONFIG_HIF_PCI := 1
+endif
+
+#Enable USB specific APIS
+ifeq ($(CONFIG_ROME_IF),usb)
+	CONFIG_HIF_USB := 1
+	CONFIG_PLD_USB_CNSS := y
+endif
+
+#Enable SDIO specific APIS
+ifeq ($(CONFIG_ROME_IF),sdio)
+	CONFIG_HIF_SDIO := 1
+endif
+
+#Enable pci read/write config functions
+ifeq ($(CONFIG_ROME_IF),pci)
+	CONFIG_ATH_PCI := 1
+endif
+
+ifeq ($(CONFIG_ROME_IF),snoc)
+	CONFIG_HIF_SNOC:= 1
+>>>>>>> f8789e1ccdf3 (staging: qcacld-3.0: disable debug build)
 endif
 endif
 
@@ -2254,9 +2335,10 @@ endif
 endif
 ccflags-y += -Wmissing-prototypes
 
-ifeq ($(call cc-option-yn, -Wheader-guard), y)
-ccflags-y += -Wheader-guard
-endif
+# To build without debug just ignore not used code.
+EXTRA_CFLAGS += $(call cc-disable-warning,unused-variable,)
+EXTRA_CFLAGS += $(call cc-disable-warning,unused-function,)
+
 # If the module name is not "wlan", then the define MULTI_IF_NAME to be the
 # same a the QCA CHIP name. The host driver will then append MULTI_IF_NAME to
 # any string that must be unique for all instances of the driver on the system.
