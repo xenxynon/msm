@@ -63,27 +63,44 @@
 #include "cds_api.h"
 #include "wlan_policy_mgr_api.h"
 #include "nan_datapath.h"
-#include "wma.h"
-#include "wlan_mgmt_txrx_utils_api.h"
-#include "wlan_objmgr_psoc_obj.h"
-#include "os_if_nan.h"
-#include <wlan_scan_ucfg_api.h>
-#include <wlan_scan_public_structs.h>
-#include <wlan_p2p_ucfg_api.h>
-#include "wlan_utility.h"
-#include "wlan_mlme_main.h"
-#include <qdf_hang_event_notifier.h>
-#include <qdf_notifier.h>
-#include "wlan_pkt_capture_ucfg_api.h"
 
-struct pe_hang_event_fixed_param {
-	uint32_t tlv_header;
-	uint8_t vdev_id;
-	uint8_t limmlmstate;
-	uint8_t limprevmlmstate;
-	uint8_t limsmestate;
-	uint8_t limprevsmestate;
-} qdf_packed;
+#define NO_SESSION 0xff
+
+static void __lim_init_scan_vars(tpAniSirGlobal pMac)
+{
+	pMac->lim.gLimUseScanModeForLearnMode = 1;
+
+	pMac->lim.gLimSystemInScanLearnMode = 0;
+
+	/* Scan related globals on STA */
+	pMac->lim.gLimReturnAfterFirstMatch = 0;
+	pMac->lim.gLim24Band11dScanDone = 0;
+	pMac->lim.gLim50Band11dScanDone = 0;
+	pMac->lim.gLimReturnUniqueResults = 0;
+
+	pMac->lim.gLimCurrentScanChannelId = 0;
+	pMac->lim.gpLimMlmScanReq = NULL;
+	pMac->lim.gDeferMsgTypeForNOA = 0;
+	pMac->lim.gpDefdSmeMsgForNOA = NULL;
+
+	pMac->lim.gLimRestoreCBNumScanInterval =
+		LIM_RESTORE_CB_NUM_SCAN_INTERVAL_DEFAULT;
+	pMac->lim.gLimRestoreCBCount = 0;
+	qdf_mem_set(pMac->lim.gLimLegacyBssidList,
+		    sizeof(pMac->lim.gLimLegacyBssidList), 0);
+
+	/* Fill in default values */
+
+	/* abort scan is used to abort an on-going scan */
+	pMac->lim.abortScan = 0;
+	qdf_mem_set(&pMac->lim.scanChnInfo, sizeof(tLimScanChnInfo), 0);
+	qdf_mem_set(&pMac->lim.dfschannelList, sizeof(tSirDFSChannelList), 0);
+
+/* WLAN_SUSPEND_LINK Related */
+	pMac->lim.gpLimSuspendCallback = NULL;
+	pMac->lim.gpLimResumeCallback = NULL;
+/* end WLAN_SUSPEND_LINK Related */
+}
 
 static void __lim_init_bss_vars(tpAniSirGlobal pMac)
 {

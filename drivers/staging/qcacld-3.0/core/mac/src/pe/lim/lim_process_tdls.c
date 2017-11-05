@@ -72,6 +72,8 @@
 #include "wlan_reg_services_api.h"
 #include "wlan_tdls_tgt_api.h"
 
+#define NO_SESSION 0xff
+
 /* define NO_PAD_TDLS_MIN_8023_SIZE to NOT padding: See CR#447630
    There was IOT issue with cisco 1252 open mode, where it pads
    discovery req/teardown frame with some junk value up to min size.
