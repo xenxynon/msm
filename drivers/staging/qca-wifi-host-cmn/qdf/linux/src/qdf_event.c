@@ -310,8 +310,10 @@ QDF_STATUS qdf_wait_for_event_completion(qdf_event_t *event, uint32_t timeout)
 	qdf_spin_unlock(&qdf_wait_event_lock);
 
 	if (QDF_STATUS_SUCCESS != status) {
-		qdf_err("Failed to insert event into tracking list");
-		goto free_node;
+		QDF_TRACE(QDF_MODULE_ID_QDF, QDF_TRACE_LEVEL_ERROR,
+			"Failed to add event in the list in %s", __func__);
+		status = QDF_STATUS_E_FAULT;
+		goto err_list_add;
 	}
 
 	if (timeout) {
