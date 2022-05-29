@@ -2078,6 +2078,11 @@ static void msm_pcm_routing_process_voice(u16 reg, u16 val, int set)
 
 	session_id = msm_pcm_routing_get_voc_sessionid(val);
 
+	if (!session_id) {
+		pr_err("%s: Invalid session_id %x\n", __func__, session_id);
+		return;
+	}
+
 	pr_debug("%s: FE DAI 0x%x session_id 0x%x\n",
 		__func__, val, session_id);
 
@@ -16301,10 +16306,10 @@ static int msm_routing_put_lsm_app_type_cfg_control(
 	int i = 0, j;
 	int num_app_types;
 
-	if (ucontrol->value.integer.value[0] > MAX_APP_TYPES ||
-		ucontrol->value.integer.value[0] > MAX_APP_TYPES) {
+	if (ucontrol->value.integer.value[0] < 0 ||
+			ucontrol->value.integer.value[0] > MAX_APP_TYPES) {
 		pr_err("%s: number of app types %ld is invalid\n",
-			__func__, ucontrol->value.integer.value[0]);
+			 __func__, ucontrol->value.integer.value[0]);
 		return -EINVAL;
 	}
 
